@@ -1,0 +1,99 @@
+version: '3.6'
+
+services:
+    db:
+        image: mariadb:10.3
+        volumes:
+            - "./.data/db:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: jhbackend
+            MYSQL_USER: root
+            MYSQL_PASSWORD: root
+        networks:
+          - backend
+        ports:
+          - 3306:3306
+#    front:
+#      build:
+#        context: .docker/nuxt
+#      volumes:
+#        - ./front:/usr/src/app
+#      links:
+#        - nginx
+#      networks:
+#        - frontend
+#      ports:
+#        - 8080:8080
+#      command: ["dev","install"]
+    adminer:
+      image: adminer
+      restart: always
+      depends_on:
+        - db
+      links:
+        - db:mysqldb
+      networks:
+        - backend
+      ports:
+        - 8081:8080
+    api:
+        build:
+          context: .docker/php7-fpm
+          args:
+            WORKDIR: /var/www/api
+        depends_on:
+            - db
+#        ports:
+#            - 9000:9000 #FPM port
+        links:
+            - db:mysqldb
+        networks:
+            - frontend
+            - backend
+        volumes:
+            - ./api:/var/www/api
+            - ./.logs/api:/var/www/api/var/logs
+    auth:
+        build:
+          context: .docker/php7-fpm
+          args:
+            WORKDIR: /var/www/auth
+        depends_on:
+            - db
+#        ports:
+#            - 9000:9000 #FPM port
+        links:
+            - db:mysqldb
+        networks:
+            - backend
+            - frontend
+        volumes:
+            - ./auth:/var/www/auth
+            - ./.logs/auth:/var/www/auth/var/logs
+    nginx:
+        build: .docker/nginx
+        ports:
+            - 8082:8082
+            - 8083:8083
+        links:
+            - api
+            - auth
+        volumes:
+          - ./api:/var/www/api
+          - ./auth:/var/www/auth
+          - ./.logs/nginx/:/var/log/nginx
+        depends_on:
+          - auth
+          - api
+        networks:
+          - frontend
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+volumes:
+  api_vol:
+  auth_vol:

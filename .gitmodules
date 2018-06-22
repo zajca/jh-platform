@@ -1,0 +1,9 @@
+[submodule "auth"]
+	path = auth
+	url = https://github.com/zajca/sf4-jwt-auth
+[submodule "front"]
+	path = front
+	url = https://github.com/zajca/nuxt-jwt
+[submodule "api"]
+	path = api
+	url = https://github.com/zajca/sf4-jwt-api
